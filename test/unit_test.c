@@ -378,14 +378,15 @@ static void test_printf(void) {
 
   {
     char *s = NULL;
-    const char *fmt = "{\"a\":%d, \"b\":%u, \"c\":%ld, \"d\":%lu, \"e\":%M}";
+    const char *fmt = "{\"a\":%d, \"b\":%u, \"c\":%ld, \"d\":%lu, \"e\":%lld, \"f\":%llu, \"g\":%M}";
     ASSERT(mjson_printf(&mjson_print_dynamic_buf, &s, fmt, -1, 3456789012,
-                        (long) -1, (unsigned long) 3456789012, f1, 1234) == 60);
+                        (long) -1, (unsigned long) 3456789012,
+                        -1099511627775LL, 1099511627775ULL, f1, 1234) == 99);
     ASSERT(s != NULL);
     str =
         "{\"a\":-1, \"b\":3456789012, \"c\":-1, \"d\":3456789012, "
-        "\"e\":[1234]}";
-    ASSERT(memcmp(s, str, 60) == 0);
+        "\"e\":-1099511627775, \"f\":1099511627775, \"g\":[1234]}";
+    ASSERT(memcmp(s, str, 99) == 0);
     free(s);
   }
 

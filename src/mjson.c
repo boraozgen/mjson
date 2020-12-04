@@ -490,6 +490,14 @@ int mjson_print_long(mjson_print_fn_t fn, void *fndata, long value,
   return fn(buf, len, fndata);
 }
 
+int mjson_print_longlong(mjson_print_fn_t fn, void *fndata, long long value,
+                     int is_signed) {
+  char buf[30];
+  const char *fmt = (is_signed ? "%lld" : "%llu");
+  int len = snprintf(buf, sizeof(buf), fmt, value);
+  return fn(buf, len, fndata);
+}
+
 int mjson_print_dbl(mjson_print_fn_t fn, void *fndata, double d,
                     const char *fmt) {
   char buf[40];
@@ -541,6 +549,10 @@ int mjson_vprintf(mjson_print_fn_t fn, void *fndata, const char *fmt,
         is_long = 1;
         fc = fmt[i + 1];
       }
+      if (fc == 'l') {
+        is_long = 2;
+        fc = fmt[i + 2];
+      }
       if (fc == 'Q') {
         char *buf = va_arg(ap, char *);
         n += mjson_print_str(fn, fndata, buf ? buf : "", buf ? strlen(buf) : 0);
@@ -551,10 +563,14 @@ int mjson_vprintf(mjson_print_fn_t fn, void *fndata, const char *fmt,
         i += 2;
       } else if (fc == 'd' || fc == 'u') {
         int is_signed = (fc == 'd');
-        if (is_long) {
+        if (is_long == 1) {
           long val = va_arg(ap, long);
           n += mjson_print_long(fn, fndata, val, is_signed);
           i++;
+        } else if (is_long == 2) {
+          long long val = va_arg(ap, long long);
+          n += mjson_print_longlong(fn, fndata, val, is_signed);
+          i += 2;
         } else {
           int val = va_arg(ap, int);
           n += mjson_print_int(fn, fndata, val, is_signed);
